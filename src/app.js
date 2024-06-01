@@ -14,6 +14,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
+// Routes import
+import userRoute from './routes/user.routes.js';
+
+
+// Routes declaration
+app.use('/api/v1/users', userRoute);
+//http://localhost:8000/api/v1/users/register
+
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
