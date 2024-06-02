@@ -5,3 +5,5 @@ class ApiRespone {
         this.data = data;
     }
 }
+
+export { ApiRespone };

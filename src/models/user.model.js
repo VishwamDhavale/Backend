@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 const userSchema = new Schema({
     username: {
-        Type: String,
+        type: String,
         required: true,
         unique: true,
         trim: true,
@@ -12,33 +12,33 @@ const userSchema = new Schema({
         index: true
     },
     fullName: {
-        Type: String,
+        type: String,
         required: true,
         unique: true,
         trim: true,
         lowercase: true
     },
     email: {
-        Type: String,
+        type: String,
         required: true,
         unique: true,
         trim: true,
         lowercase: true
     },
     password: {
-        Type: String,
+        type: String,
         required: [true, 'Password is required'],
     },
     avatar: {
-        Type: String,
+        type: String,
         required: true
     },
     coverImage:
     {
-        Type: String
+        type: String
     },
     refreshToken: {
-        Type: String,
+        type: String,
         trim: true
 
     },
@@ -51,7 +51,7 @@ const userSchema = new Schema({
 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
-    this.passwaord = await bcrypt.hash(this.password, 8);
+    this.password = await bcrypt.hash(this.password, 8);
     next();
 })
 
