@@ -3,12 +3,13 @@ import ApiError from '../utils/ApiError.js';
 import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { ApiRespone } from '../utils/ApiRespone.js';
+import jwt from 'jsonwebtoken';
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
     try {
         const user = await User.findById(userId);
         const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });// when saving mongoose will validate the fields, we are not updating the fields so we are skipping the validation
         return { accessToken, refreshToken };
@@ -30,7 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // return res
 
     const { username, email, password, fullName } = req.body;
-    // console.log("username", username, "email", email, "password", password, "fullName", fullName)
+    console.log("username", username, "email", email, "password", password, "fullName", fullName)
     // console.log(req.files)
     if (!username || !email || !password || !fullName) {
         throw new ApiError(400, 'Please fill in all fields');
@@ -51,7 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //const coverLocalPath = req.files?.coverImage[0]?.path;
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path;
+        coverImageLocalPath = req.files.coverImage[0].path
     }
 
     if (!avatarLocalPath) {
@@ -104,28 +105,36 @@ const loginUser = asyncHandler(async (req, res) => {
     // save refresh token in db
     // return res in cookie secure httponly
 
-    const { email, username, password } = req.body;
-    if (!email || !username || !password) {
-        throw new ApiError(400, 'Please fill in all fields');
+
+    const { username, email, password } = req.body;
+    // console.log("email", email, "username", username, "password", password)
+
+    if (!username && !email) {
+        throw new ApiError(400, "username or email is required")
     }
 
-    const findUser = User.findOne({
-        $or: [{ email }, { username }]
+
+    const user = await User.findOne({
+        $or: [{ username }, { email }]
     })
 
-    if (!findUser) {
+    if (!user) {
         throw new ApiError(401, 'No user found');
     }
+    if (!password) {
+        throw new ApiError(400, 'Please enter password');
+    }
 
-    const isMatch = await findUser.isPasswordMatch(password);
+
+    const isMatch = await user.isPasswordMatch(password);
 
     if (!isMatch) {
         throw new ApiError(401, 'Invalid password');
     }
 
-    const { accessToken, refreshToken } = await generateAccessTokenAndRefreshToken(findUser._id);
+    const { accessToken, refreshToken } = await generateAccessTokenAndRefreshToken(user._id);
 
-    const loginUser = await User.findById(findUser._id).select("-password -refreshToken");
+    const loginUser = await User.findById(user._id).select("-password -refreshToken");
 
 
     const options = {
@@ -167,7 +176,51 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiRespone(200, 'User logged out successfully', {}));
 });
 
+const returnAccesToken = asyncHandler(async (req, res) => {
+    // get refresh token from cookie
+    // check if refresh token exists
+    // verify refresh token
+    // generate access token
+    // return res
+    const imcomingrefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (!imcomingrefreshToken) {
+        throw new ApiError(400, 'No refresh token found');
+    }
+
+    try {
+        const decodedToken = jwt.verify(imcomingrefreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        const user = await User.findById(decodedToken?._id);
+
+        if (!user) {
+            throw new ApiError(401, 'Invalid refresh token');
+        }
+        if (imcomingrefreshToken !== user.refreshToken) {
+            throw new ApiError(401, 'refresh token expired or revoked');
+        }
+
+        const { accessToken, newrefreshToken } = await generateAccessTokenAndRefreshToken(user._id);
+
+        const options = {
+            httponly: true,//only for server and not accessible by javascript(frontend)
+            secure: true,//only for https
+        }
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newrefreshToken, options)
+            .json(new ApiRespone(200, 'Access token generated', {
+                accessToken, refreshToken
+            }));
+    } catch (error) {
+        throw new ApiError(401, error?.message || 'Unauthorized');
+
+    }
+});
+
 export {
     registerUser, loginUser,
-    logoutUser
+    logoutUser,
+    returnAccesToken
 };
