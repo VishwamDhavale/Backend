@@ -20,8 +20,11 @@ const healthCheck = asyncHandler(async (req, res) => {
             status: "OK",
             database: {
                 state: states[dbStatus] || "unknown",
+                readyState: dbStatus,
                 uriSet: !!process.env.MONGO_URI,
-                maskedUri: maskedUri
+                maskedUri: maskedUri,
+                host: mongoose.connection.host || "none",
+                name: mongoose.connection.name || "none"
             },
             uptime: process.uptime(),
             timestamp: Date.now()
