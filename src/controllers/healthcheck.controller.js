@@ -12,10 +12,17 @@ const healthCheck = asyncHandler(async (req, res) => {
         99: "uninitialized"
     };
 
+    const mongoUri = process.env.MONGO_URI || "";
+    const maskedUri = mongoUri.replace(/\/\/[^:]+:[^@]+@/, "//***:***@");
+
     return res.status(200).json(
         new ApiRespone(200, "Health check passed", {
             status: "OK",
-            database: states[dbStatus] || "unknown",
+            database: {
+                state: states[dbStatus] || "unknown",
+                uriSet: !!process.env.MONGO_URI,
+                maskedUri: maskedUri
+            },
             uptime: process.uptime(),
             timestamp: Date.now()
         })
