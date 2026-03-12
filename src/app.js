@@ -24,6 +24,7 @@ import likeRoute from './routes/like.routes.js';
 import tweetRoute from './routes/tweet.routes.js';
 import playlistRoute from './routes/playlist.routes.js';
 import subscriptionRoute from './routes/subscription.routes.js';
+import healthcheckRoute from './routes/healthcheck.routes.js';
 
 
 // Routes declaration
@@ -34,6 +35,7 @@ app.use('/api/v1/likes', likeRoute);
 app.use('/api/v1/tweets', tweetRoute);
 app.use('/api/v1/playlist', playlistRoute);
 app.use('/api/v1/subscriptions', subscriptionRoute);
+app.use('/api/v1/healthcheck', healthcheckRoute);
 
 // error handling
 import ApiError from "./utils/ApiError.js";
