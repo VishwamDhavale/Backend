@@ -376,8 +376,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 isSubscribed: 1,
                 avatar: 1,
                 coverImage: 1,
-                email: 1
-
+                email: 1,
+                createdAt: 1
             }
         }
     ])
@@ -389,7 +389,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiRespone(200, channel[0], "User channel fetched successfully")
+            new ApiRespone(200, "User channel fetched successfully", channel[0])
         )
 })
 

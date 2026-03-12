@@ -12,7 +12,7 @@ const PlaylistSchema = new Schema({
     },
     thumbnail: {
         type: String,
-        required: true
+        // Optional, can be derived
     },
 
     owner: {
@@ -20,11 +20,12 @@ const PlaylistSchema = new Schema({
         ref: 'User',
         required: true
     },
-    video: {
-        type: Schema.Types.ObjectId,
-        ref: 'Video',
-        required: true
-    }
+    videos: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Video'
+        }
+    ]
 }, {
     timestamps: true
 });
