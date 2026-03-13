@@ -9,7 +9,9 @@ import mongoose, { isValidObjectId } from "mongoose";
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-    
+
+    console.log("in video controller")
+
     const filter = {};
     if (query) {
         filter.$or = [
@@ -34,11 +36,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
 
     const aggregate = Video.aggregate([
-        { 
+        {
             $match: {
                 ...filter,
                 ...(userId ? { owner: new mongoose.Types.ObjectId(userId) } : {})
-            } 
+            }
         },
         {
             $lookup: {

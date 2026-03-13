@@ -3,17 +3,35 @@ import { DB_Name } from "../constants.js";
 
 const connectdb = async () => {
     try {
+        if (mongoose.connection.readyState >= 1) {
+            process.stdout.write("[DATABASE EVENT] Using existing database connection\n");
+            return;
+        }
+
         if (!process.env.MONGO_URI) {
             throw new Error("MONGO_URI is not defined in environment variables");
         }
 
-        const baseUri = process.env.MONGO_URI.replace(/\/+$/, "");
-        const maskedUri = baseUri.replace(/\/\/[^:]+:[^@]+@/, "//***:***@");
+        // Handle case where URI might have query params
+        // Format: mongodb+srv://user:pass@host/dbname?params
+        let connectionUrl = process.env.MONGO_URI;
         
-        process.stdout.write(`[DATABASE] Connecting to: ${maskedUri}/${DB_Name}\n`);
+        // Remove trailing slashes before parsing
+        connectionUrl = connectionUrl.replace(/\/+$/, "");
+
+        const hasQueryParams = connectionUrl.includes("?");
+        const basePart = hasQueryParams ? connectionUrl.split("?")[0] : connectionUrl;
+        const queryPart = hasQueryParams ? `?${connectionUrl.split("?")[1]}` : "";
+
+        // If basePart already ends with a database name, we might be double-appending.
+        // But for Atlas +srv, it usually ends at the host.
+        const finalUrl = `${basePart.replace(/\/$/, "")}/${DB_Name}${queryPart}`;
+        const maskedUri = finalUrl.replace(/\/\/[^:]+:[^@]+@/, "//***:***@");
         
-        const connectionInstance = await mongoose.connect(`${baseUri}/${DB_Name}`, {
-            serverSelectionTimeoutMS: 5000, // Time out after 5s instead of buffering forever
+        process.stdout.write(`[DATABASE] Connecting to: ${maskedUri}\n`);
+        
+        const connectionInstance = await mongoose.connect(finalUrl, {
+            serverSelectionTimeoutMS: 5000,
         })
         
         process.stdout.write(`[DATABASE] MongoDB connected !! DB HOST: ${connectionInstance.connection.host}\n`);

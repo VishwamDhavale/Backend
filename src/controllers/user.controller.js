@@ -139,8 +139,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
     const options = {
-        httponly: true,//only for server and not accessible by javascript(frontend)
-        secure: true,//only for https
+        httpOnly: true, //only for server and not accessible by javascript(frontend)
+        secure: true, //only for https
+        sameSite: "none" //required for cross-origin cookies
     }
 
     return res.status(200)
@@ -167,8 +168,9 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 
     const options = {
-        httponly: true,//only for server and not accessible by javascript(frontend)
-        secure: true,//only for https
+        httpOnly: true, //only for server and not accessible by javascript(frontend)
+        secure: true, //only for https
+        sameSite: "none" //required for cross-origin cookies
     }
 
     return res.status(200)
@@ -204,8 +206,9 @@ const returnAccesToken = asyncHandler(async (req, res) => {
         const { accessToken, newrefreshToken } = await generateAccessTokenAndRefreshToken(user._id);
 
         const options = {
-            httponly: true,//only for server and not accessible by javascript(frontend)
-            secure: true,//only for https
+            httpOnly: true, //only for server and not accessible by javascript(frontend)
+            secure: true, //only for https
+            sameSite: "none" //required for cross-origin cookies
         }
 
         return res.status(200)

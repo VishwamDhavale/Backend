@@ -118,6 +118,6 @@ dist
 .pnp.*
 
 
-/frontend
+# /frontend
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node
