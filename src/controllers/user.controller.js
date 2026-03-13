@@ -70,8 +70,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const user = await User.create({
         fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        avatar: avatar.url?.replace("http://", "https://"),
+        coverImage: coverImage?.url?.replace("http://", "https://") || "",
         email,
         password,
         username: username.toLowerCase()
@@ -282,13 +282,13 @@ const changeUserAvatar = asyncHandler(async (req, res) => {
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-    if (!avatar.url) {
+    if (!avatar.url && !avatar.secure_url) {
         throw new ApiError(500, 'Failed to upload image');
     }
 
     const user = await User.findByIdAndUpdate(req.user._id, {
         $set: {
-            avatar: avatar.url
+            avatar: avatar.url?.replace("http://", "https://") || avatar.secure_url
         }
     }, {
         new: true
@@ -307,13 +307,13 @@ const changeCoverImage = asyncHandler(async (req, res) => {
 
     const coverImagePath = await uploadOnCloudinary(coverImgaeLocalPath);
 
-    if (!coverImagePath.url) {
+    if (!coverImagePath.url && !coverImagePath.secure_url) {
         throw new ApiError(500, 'Failed to upload image');
     }
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, {
         $set: {
-            coverImage: coverImagePath.url
+            coverImage: coverImagePath.url?.replace("http://", "https://") || coverImagePath.secure_url
 
         }
     }, {
